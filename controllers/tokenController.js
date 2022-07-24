@@ -38,7 +38,7 @@ class tokensController {
           const check = await Token.findOne({ token: token.token });
           if (!check) {
             const new_token = new Token({ token: refreshToken });
-            new_token.save();
+            await new_token.save();
           } else {
             console.log('already saved');
           }
