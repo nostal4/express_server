@@ -54,7 +54,7 @@ class authController {
       }
       const accessToken = generateAccessToken(user._id, user.roles);
       const refreshToken = jwt.sign({ id: user._id }, secret);
-      const token = new Token({ token: refreshToken });
+      const token = new Token({ token: refreshToken, userId: user._id });
       await token.save();
       return res.json({ accessToken: accessToken, refreshToken: refreshToken });
     } catch (e) {

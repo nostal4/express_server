@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Role = require('../models/Role');
 const bcrypt = require('bcryptjs');
+const Token = require('../models/Token');
 
 class usersControler {
   async getUsers(req, res) {
@@ -79,7 +80,8 @@ class usersControler {
           email: _email,
           roles: [userRole.value]
         };
-        if (_password && _password.trim().length > 4) {
+        const passChanged = _password && _password.trim().length > 4;
+        if (passChanged) {
           obj.password = bcrypt.hashSync(_password, 7);
         }
 
@@ -91,7 +93,11 @@ class usersControler {
             if (err) {
               return res.status(404).send();
             } else {
-              return res.send(result);
+              if (passChanged){
+                Token.deleteMany({userId:_id}).then((data) => res.send(result))
+              } else {
+                res.send(result);
+              }   
             }
           }
         );
@@ -125,7 +131,7 @@ class usersControler {
               if (err) {
                 res.status(404).send();
               } else {
-                res.send('ok');
+                Token.deleteMany({userId:_id}).then((data) => res.send('ok'))
               }
             }
           );
