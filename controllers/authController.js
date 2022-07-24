@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const { secret, jwtLifetime } = require('../config');
+const logger = require('../logger');
 
 const generateAccessToken = (id, roles) => {
   const payload = {
@@ -16,6 +17,7 @@ const generateAccessToken = (id, roles) => {
 class authController {
   async registration(req, res) {
     try {
+      logger.info(req, { meta: 'registration' }); 
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ message: 'Reg error', errors });
@@ -36,13 +38,13 @@ class authController {
       await user.save();
       return res.json({ message: 'Registration done' });
     } catch (e) {
-      console.log(e);
+      logger.error(e);
       res.status(400).json({ message: 'Registration error' });
     }
   }
   async login(req, res) {
-    try {
-      console.log('auth controller');
+    try {    
+      logger.info(req, { meta: 'registration' });  
       const { username, password } = req.body;
       const user = await User.findOne({ username });
       if (!user) {
@@ -58,7 +60,7 @@ class authController {
       await token.save();
       return res.json({ accessToken: accessToken, refreshToken: refreshToken });
     } catch (e) {
-      console.log(e);
+      logger.error('text error');
       res.status(400).json({ message: 'Login error' });
     }
   }

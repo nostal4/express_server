@@ -11,15 +11,7 @@ const generateAccessToken = (id, roles) => {
   return jwt.sign(payload, secret, { expiresIn: jwtLifetime });
 };
 
-class tokensController {
-  async getTokens(req, res) {
-    try {
-      const tokens = await Token.find();
-      res.json(tokens);
-    } catch (e) {
-      res.status(404).send('not found');
-    }
-  }
+class tokensController { 
   async getNewTokens(req, res) {
     try {
       const refresh = req.headers.authorization.split(' ')[1];
@@ -89,30 +81,7 @@ class tokensController {
     } catch {
       res.status(404).send('error');
     }
-  }
-  async deleteToken(req, res) {
-    try {
-      // const { _id } = req.params;
-      console.log('search');
-      const tokens = await Token.find();
-      console.log(tokens);
-      res.json(tokens);
-      for (let i = 0; i < tokens.length; i++) {
-        console.log(tokens[i]);
-        console.log(await Token.findByIdAndDelete({ _id: tokens[i]._id }));
-      }
-      // res.send("ok")
-
-      // const token = await Token.findByIdAndDelete({ _id });
-      // if (token._id) {
-      //   res.send(token);
-      // } else {
-      //   res.status(404).send('not found');
-      // }
-    } catch {
-      res.status(404).send('not found');
-    }
-  }
+  }  
 }
 
 module.exports = new tokensController();

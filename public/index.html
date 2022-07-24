@@ -103,21 +103,16 @@
                 geoTimerId = setInterval(getWeather, 500)
             }
 
-            async function getUserRole() {
-                console.log("33");
-                //await ApproveToken()
-                console.log("44");
+            async function getUserRole() {            
                 try{
                     await ApproveToken()
-                    
-                    // token = localStorage.getItem("accessToken")
+                                      
                     const response = await fetch("/token/user", {
                     method: "GET",
                     headers: { "Accept": "application/json", "Authorization": "Bearer " + localStorage.getItem("accessToken") }
                     });              
                     if (response.ok === true) {
-                        const user = await response.json();
-                        console.log(user);
+                        const user = await response.json();                     
                         let role = user.roles[0];
                         
                         if (role === "USER") {                  
@@ -132,8 +127,7 @@
                         }      
                                          
                     }
-                    else{
-                        console.log("22");
+                    else{                       
                         user_name.textContent = "You are GUEST"                    
                         userLink.remove();
                         bookLink.remove();
@@ -141,8 +135,7 @@
                         change.remove()   
                     }
                 }
-                catch{
-                    console.log("11");
+                catch{            
                     user_name.textContent = "You are GUEST"                    
                     userLink.remove();
                     bookLink.remove();

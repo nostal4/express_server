@@ -127,8 +127,7 @@
             });
             if (response.ok === true) {
                 const book = await response.json();
-                reset();
-                console.log(book);
+                reset();              
                 document.querySelector("tbody").append(row(book));
             }
         }
@@ -290,18 +289,15 @@
             });
             if (response.ok === true && localStorage.getItem("accessToken")) {
                 const user = await response.json();
-                let role = user.roles[0];
-                console.log(role);
+                let role = user.roles[0];             
                 if (role === "USER") {
                     form[0].remove()
                     users.remove()
                     setTimeout(() => {
-                        editLink.forEach(element => {
-                            console.log(element);
+                        editLink.forEach(element => {                         
                             element.remove()
                         })
-                        removeLink.forEach(element => {
-                            console.log(element);
+                        removeLink.forEach(element => {                      
                             element.remove()
                         })
                     }, 100)
