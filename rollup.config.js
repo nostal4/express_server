@@ -1,3 +1,0 @@
-{
-"heroku-postbuild": "rollup -c"
-}
