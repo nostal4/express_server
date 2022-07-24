@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="js/token_func.js"></script>
+    <title>Document</title>
+</head>
+
+<body>
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <ul class="nav navbar-nav">
+                <li><a href="../">Home</a></li>
+            </ul>
+        </div>
+    </nav>
+    <h2>Registration</h2>
+    <form name="userForm">
+        <input type="hidden" name="_id" value="0" />
+        <div class="form-group">
+            <label for="username">Name:</label>
+            <input class="form-control" name="username" required maxlength="30" />
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <div id="email"></div>
+            <input class="form-control" name="email" type="email" required maxlength="50" />
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <!-- <input class="form-control" name="password" /> -->
+            <input class="form-control" name="password" required pattern="[^' ']+" minlength="4" maxlength="30" />
+        </div>
+        <div id="resp"></div>
+        <div class="panel-body">
+            <button type="submit" class="btn btn-sm btn-primary">Save</button>
+        </div>
+    </form>
+    <script>        
+    async function check() {
+                try{
+                    await ApproveToken() 
+                    window.location.href = "/";                   
+                }
+                catch{
+                                    
+                }                                   
+            }    
+        async function CreateUser(userName, userEmail, userPassword) {
+            let mail = document.getElementById("resp");
+            while (mail.firstChild) {
+                mail.removeChild(mail.firstChild);
+            }         
+            
+            const response = await fetch("/auth/registration", {
+                method: "POST",
+                headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: userName,
+                    email: userEmail,
+                    password: userPassword
+                })
+            });
+            if (response.ok === true) {
+                const user = await response.json();
+                reset();
+                window.location.href = '/login'; 
+            }
+            else{
+                const err = await response.json()
+                document.getElementById("resp").append(err.message)
+            }                     
+        }
+        function reset() {
+            const form = document.forms["userForm"];
+            form.reset();
+            form.elements["_id"].value = 0;
+        }
+
+        document.forms["userForm"].addEventListener("submit", e => {
+            e.preventDefault();
+            const form = document.forms["userForm"];
+            const username = form.elements["username"].value;
+            const email = form.elements["email"].value;
+            const password = form.elements["password"].value;
+            CreateUser(username, email, password);
+        });
+        check()
+    </script>
+</body>
+
+</html>

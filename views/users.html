@@ -1,0 +1,228 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>User List</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="css/users.css">
+    <script src="js/token_func.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <ul class="nav navbar-nav">
+                <li><a href="../">Home</a></li>
+                <li><a href="../book">Books</a></li>
+                <li class="active" id="users"><a href="../user">Users</a></li>
+            </ul>
+        </div>
+    </nav>
+    <h2>User List</h2>
+    <form name="userForm">
+        <input type="hidden" name="_id" value="0" />
+        <div class="form-group">
+            <label for="username">Name:</label>
+            <input class="form-control" name="username" required maxlength="30"/>
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input class="form-control" name="email" type="email" required maxlength="50"/>
+            <div id="email"></div>
+            
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input class="form-control" name="password" pattern="[^' ']+" minlength= "8" maxlength="30"/>
+        </div>
+        <div class="form-group">
+            <label for="roles">Role:</label>
+            <select name="roles" class="form-control">                
+                <option value="USER">USER</option>
+                <option value="ADMIN">ADMIN</option>
+            </select>
+        </div>
+        <div class="panel-body">
+            <button type="submit" class="btn btn-sm btn-primary">Save</button>            
+        </div>
+    </form>
+    <table class="table table-condensed table-striped table-bordered" id="myTable">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Options</th></tr></thead>
+        <tbody>
+        </tbody>
+    </table>
+   
+    <script>
+        async function check() {
+                try{
+                    await ApproveToken()                    
+                }
+                catch{
+                    window.location.href = "/";                
+                }                                   
+            }  
+
+
+        async function GetUsers() {  
+            await ApproveToken()         
+            const response = await fetch("/user/users", {
+                method: "GET",
+                headers: { "Accept": "application/json", "Authorization": "Bearer " + localStorage.getItem("accessToken") }
+            });
+          
+            if (response.ok === true) {
+              
+                const users = await response.json();               
+                let rows = document.querySelector("tbody"); 
+                users.forEach(user => {
+                    rows.append(row(user));
+                });
+            }
+        }
+  
+        async function GetUser(id) {
+            await ApproveToken()
+            const response = await fetch("/user/" + id, {
+                method: "GET",
+                headers: { "Accept": "application/json", "Authorization": "Bearer " + localStorage.getItem("accessToken")},               
+            });
+            if (response.ok === true) {
+                const user = await response.json();
+                const form = document.forms["userForm"];
+                form.elements["_id"].value = user._id;
+                form.elements["username"].value = user.username;
+                form.elements["email"].value = user.email;               
+                form.elements["roles"].value = user.roles[0];
+            }
+        }
+     
+        async function EditUser(userId, userName, userEmail, userPassword, userRole) {    
+            await ApproveToken()    
+            let mail = document.getElementById("email");
+            while(mail.firstChild) {                    
+                    mail.removeChild(mail.firstChild);
+                }        
+            const response = await fetch("/user", {
+                method: "PUT",
+                headers: { "Accept": "application/json", "Content-Type": "application/json", "Authorization": "Bearer " + localStorage.getItem("accessToken") },
+                body: JSON.stringify({
+                    _id: userId,
+                    _username: userName,
+                    _email: userEmail,
+                    _password: userPassword,
+                    _role: [userRole]
+                })
+            });
+            if (response.ok === true) {
+                const user = await response.json();
+                reset();
+                document.querySelector("tr[data-rowid='" + user._id + "']").replaceWith(row(user));
+            }
+            else{      
+                if(response.status == 404){
+                    reset();
+                }   
+                if(response.status == 405){
+                    mail.append("Email is used");
+                }                                      
+                
+            }
+        }
+        
+        
+        async function DeleteUser(_id) {
+            await ApproveToken()
+            const response = await fetch("/user/" + _id, {
+                method: "DELETE",
+                headers: { "Accept": "application/json", "Authorization": "Bearer " +  localStorage.getItem("accessToken") }
+            });
+            if (response.ok === true) {
+                const user = await response.json();
+                document.querySelector("tr[data-rowid='" + user._id + "']").remove();
+            }
+        }
+  
+       
+        function reset() {
+            const form = document.forms["userForm"];
+            form.reset();
+            form.elements["_id"].value = 0;
+        }
+        
+      
+        function row(user) {
+  
+            const tr = document.createElement("tr");
+            tr.setAttribute("data-rowid", user._id);
+  
+            const nameTd = document.createElement("td");
+            nameTd.append(user.username);
+            tr.append(nameTd);
+  
+            const emailTd = document.createElement("td");
+            emailTd.append(user.email);
+            tr.append(emailTd);
+
+            const roleTd = document.createElement("td");
+            roleTd.append(user.roles[0]);
+            tr.append(roleTd);
+              
+            const linksTd = document.createElement("td");
+  
+            const editLink = document.createElement("a");
+            editLink.setAttribute("data-id", user._id);
+            editLink.setAttribute("style", "cursor:pointer;padding:15px;");
+            editLink.append("Change");
+            editLink.addEventListener("click", e => {
+  
+                e.preventDefault();                          
+                GetUser(user._id);
+            });
+            linksTd.append(editLink);
+  
+            const removeLink = document.createElement("a");
+            removeLink.setAttribute("data-id", user._id);
+            removeLink.setAttribute("style", "cursor:pointer;padding:15px;");
+            removeLink.append("Delete");
+            removeLink.addEventListener("click", e => {
+  
+                e.preventDefault();
+                DeleteUser(user._id);
+            });
+  
+            linksTd.append(removeLink);
+            tr.appendChild(linksTd);
+  
+            return tr
+
+            
+        }
+
+            
+        
+  
+        
+        document.forms["userForm"].addEventListener("submit", e => {
+            e.preventDefault();
+            const form = document.forms["userForm"];
+            const id = form.elements["_id"].value;
+            const username = form.elements["username"].value;
+            const email = form.elements["email"].value;
+            const password = form.elements["password"].value;
+            const role = form.elements["roles"].value;           
+            EditUser(id, username, email, password, role);
+        });
+  
+        // check()
+        GetUsers();
+
+        window.onload = function() {
+            var table = document.getElementById("myTable");
+            var tbody = table.querySelector("tbody");
+        }
+
+        
+    </script>
+</body>
+</html>

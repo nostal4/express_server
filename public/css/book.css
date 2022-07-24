@@ -1,0 +1,7 @@
+textarea {
+  resize: none;
+}
+tr,
+th {
+  text-align: center;
+}

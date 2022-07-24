@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='UTF-8' />
+    <link rel="stylesheet" href="css/index.css">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,900" rel="stylesheet">
+    <script src="js/token_func.js"></script>
+    <title>Start Page</title>
+</head>
+
+<body>
+    <div class='page'>
+        <header>
+            <h1>Local Library</h1>
+            <nav>
+                <ul>
+                    <div id="user_name"></div>
+                    <li id="book"><a href='/book'>Books</a></li>
+                    <li id="user"><a href='/user'>Users</a></li>
+                    <li id="login"><a href='/login'>Sign in</a></li>
+                    <li id="reg"><a href='/registration'>Sign up</a></li>
+                    <li id="change"><a href='/change'>Change password</a></li>
+                    <a href="../"><button id="logout">Logout</button></a>
+                </ul>
+            </nav>
+        </header>
+        <div class="bg"></div>
+        <div>
+            <div id="description"></div>
+            <h3 id="temp"></h3>
+            <div id="location"></div>
+        </div>
+        <script>
+            getUserRole()
+            const userLink = document.getElementById("user");
+            const bookLink = document.getElementById("book");
+            const loginLink = document.getElementById("login");
+            const regLink = document.getElementById("reg");
+            const logoutBtn = document.getElementById("logout");           
+            const user_name = document.getElementById("user_name");
+            logoutBtn.addEventListener("click", function () {
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("refreshToken");
+            });
+            var geoTimerId;
+            let coords = {};
+            coords.lat = null;
+            coords.lon = null;
+            let geoDenied = false;
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    coords.lat = position.coords.latitude;
+                    coords.lon = position.coords.longitude;
+                }, function (error) {
+                    if (error.PERMISSION_DENIED) {
+                        geoDenied = true;
+                    }
+                });
+            async function getWeather() {
+                if (geoDenied) {
+                    clearInterval(geoTimerId);
+                    return;
+                }
+                if (coords.lat != null && coords.lon != null) {
+                    const response = await fetch("/weather", {
+                        method: "POST",
+                        headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            lon: coords.lon,
+                            lat: coords.lat
+                        })
+                    }).catch(function () {
+                        clearInterval(geoTimerId);;
+                    });
+                    if (response.ok === true) {
+                        const resp = await response.json();
+                        drawWeather(resp);
+                        clearInterval(geoTimerId);
+                    };
+                }
+            }
+            function drawWeather(d) {
+                var celcius = Math.round(parseFloat(d.main.temp) - 273.15);
+                var fahrenheit = Math.round(((parseFloat(d.main.temp) - 273.15) * 1.8) + 32);
+                var description = d.weather[0].description;
+
+                document.getElementById('description').innerHTML = description;
+                document.getElementById('temp').innerHTML = celcius + '&deg;';
+                document.getElementById('location').innerHTML = d.name;
+
+                if (description.indexOf('rain') > 0) {
+                    document.body.className = 'rainy';
+                } else if (description.indexOf('cloud') > 0) {
+                    document.body.className = 'cloudy';
+                } else if (description.indexOf('sunny') > 0) {
+                    document.body.className = 'sunny';
+                } else {
+                    document.body.className = 'clear';
+                }
+            }
+            window.onload = function () {
+                geoTimerId = setInterval(getWeather, 500)
+            }
+
+            async function getUserRole() {
+                console.log("33");
+                //await ApproveToken()
+                console.log("44");
+                try{
+                    await ApproveToken()
+                    
+                    // token = localStorage.getItem("accessToken")
+                    const response = await fetch("/token/user", {
+                    method: "GET",
+                    headers: { "Accept": "application/json", "Authorization": "Bearer " + localStorage.getItem("accessToken") }
+                    });              
+                    if (response.ok === true) {
+                        const user = await response.json();
+                        console.log(user);
+                        let role = user.roles[0];
+                        
+                        if (role === "USER") {                  
+                            user_name.textContent = "You are "+role
+                            userLink.remove();
+                            loginLink.remove()
+                            regLink.remove()
+                        } else if (role === "ADMIN") {
+                            user_name.textContent = "You are "+role
+                            loginLink.remove()
+                            regLink.remove()
+                        }      
+                                         
+                    }
+                    else{
+                        console.log("22");
+                        user_name.textContent = "You are GUEST"                    
+                        userLink.remove();
+                        bookLink.remove();
+                        logoutBtn.remove();
+                        change.remove()   
+                    }
+                }
+                catch{
+                    console.log("11");
+                    user_name.textContent = "You are GUEST"                    
+                    userLink.remove();
+                    bookLink.remove();
+                    logoutBtn.remove();
+                    change.remove()                
+                }                                   
+            }
+            
+            
+        
+        </script>
+</body>
+
+</html>

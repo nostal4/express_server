@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="js/token_func.js"></script>
+    <title>Document</title>
+</head>
+
+<body>
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <ul class="nav navbar-nav">
+                <li><a href="../">Home</a></li>
+            </ul>
+        </div>
+    </nav>
+    <h2>Password change</h2>
+    <form name="userForm">
+        <input type="hidden" name="_id" value="0" />
+        <div class="form-group">
+            <label for="password">Current password:</label>
+            <input class="form-control" name="password" required pattern="[^' ']+" minlength="4" maxlength="30" />
+        </div>
+        <div class="form-group">
+            <label for="new">New password:</label>
+            <input class="form-control" name="new" required pattern="[^' ']+" minlength="4" maxlength="30" />
+        </div>
+        <div class="panel-body">
+            <button type="submit" class="btn btn-sm btn-primary">Save</button>
+        </div>
+        <div id="change"></div>
+    </form>
+    <script>               
+        async function check() {
+                try{
+                    await ApproveToken()                    
+                }
+                catch{
+                    window.location.href = "/";                
+                }                                   
+            }            
+        const change = document.getElementById("change")      
+        async function getUserRole() {
+            ApproveToken() 
+            const response = await fetch("/token/user", {
+                method: "GET",
+                headers: { "Accept": "application/json", "Authorization": "Bearer " + localStorage.getItem("accessToken") }
+            });
+            if (response.ok === true) {
+                const user = await response.json();
+                let role = user.roles[0];
+                let id = user.id;
+                return id;
+            }
+        }
+        async function updatePassword(userId, userOldPass, userNewPass) {
+            await ApproveToken()
+            while(change.firstChild) {                    
+                change.removeChild(change.firstChild);
+                }
+            const response = await fetch("/user/password", {
+                method: "PUT",
+                headers: { "Accept": "application/json", "Content-Type": "application/json","Authorization": "Bearer " + localStorage.getItem("accessToken") },
+                body: JSON.stringify({
+                    _id: userId,
+                    _new_password: userNewPass,
+                    _old_password: userOldPass
+                })
+            });
+            if (response.ok === true) {
+                change.append("Password changed")
+                window.location.href = "/"; 
+            }
+            else {
+                const err = await response.json()
+                change.append(err.message)
+            }
+        }
+
+        function reset() {
+            const form = document.forms["userForm"];
+            form.reset();
+            form.elements["_id"].value = 0;
+        }
+        document.forms["userForm"].addEventListener("submit", e => {
+            e.preventDefault();
+            const func1 = async () => {
+                let id = await getUserRole()
+                return id
+            }
+            (async () => {
+                let res = await func1()
+                const form = document.forms["userForm"];
+                const oldPassword = form.elements["password"].value;
+                const newPassword = form.elements["new"].value;
+                updatePassword(res, oldPassword, newPassword);
+                reset()
+            })();
+        });
+        check()
+    </script>
+</body>
+
+</html>

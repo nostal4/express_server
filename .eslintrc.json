@@ -1,0 +1,28 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "extends": ["plugin:sonarjs/recommended"],
+  "plugins": ["sonarjs"],
+  "rules": {
+    "no-alert": "error",
+    "no-empty": "error",
+    "no-label-var": "error",
+    "no-lonely-if": "error",
+    "no-loop-func": "error",
+    "no-nested-ternary": "error",
+    "no-return-await": "error",
+    "no-unused-expressions": "error",
+    "no-useless-catch": "error",
+    "no-var": "error",
+    "space-in-parens": ["error", "never"],
+    "quotes": ["error", "single"],
+    "semi-spacing": "error"
+  }
+}

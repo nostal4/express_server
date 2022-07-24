@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="js/token_func.js"></script>
+    <title>Document</title>
+</head>
+<body>    
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <ul class="nav navbar-nav">
+                <li><a href="../">Home</a></li>
+            </ul>
+        </div>
+    </nav>
+    <h2>Login</h2>
+    <form name="userForm">
+        <input type="hidden" name="_id" value="0" />
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input class="form-control" name="username" required maxlength="30" />
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <!-- <input class="form-control" name="password" /> -->
+            <input class="form-control" name="password" required pattern="[^' ']+" minlength="4" maxlength="30" />
+        </div>
+        <div id="resp"></div>
+        <div class="panel-body">
+            <button type="submit" class="btn btn-sm btn-primary">Save</button>
+        </div>
+    </form>
+    <script>
+        async function check() {
+                try{
+                    await ApproveToken() 
+                    window.location.href = "/";                   
+                }
+                catch{
+                                    
+                }                                   
+            }  
+         const accessToken = localStorage.getItem("accessToken");
+        const refreshToken = localStorage.getItem("refreshToken");
+        async function CreateUser(userName, userPassword) {
+            let resp = document.getElementById("resp");
+            while(resp.firstChild) {                    
+                resp.removeChild(resp.firstChild);
+                }
+            const response = await fetch("/auth/login", {
+                method: "POST",
+                headers: { "Accept": "application/json", "Content-Type": "application/json", "Authorization": "Bearer " + accessToken },
+                body: JSON.stringify({
+                    username: userName,
+                    password: userPassword
+                })
+            });
+            if (response.ok === true) {
+                const user = await response.json();
+                reset();
+                localStorage.setItem("accessToken", user.accessToken)
+                localStorage.setItem("refreshToken", user.refreshToken)
+                document.getElementById("resp").append("success")
+                // window.location.href = "/";               
+            } else {
+                const err = await response.json()
+                document.getElementById("resp").append(err.message)
+            }
+        }
+
+        function reset() {
+            const form = document.forms["userForm"];
+            form.reset();
+            form.elements["_id"].value = 0;
+        }
+
+        document.forms["userForm"].addEventListener("submit", e => {
+            e.preventDefault();
+            const form = document.forms["userForm"];
+            const username = form.elements["username"].value;
+            const password = form.elements["password"].value;
+            CreateUser(username, password);
+        });
+        // check()
+    </script>
+</body>
+</html>

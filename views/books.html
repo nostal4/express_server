@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>List of books</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="css/book.css">
+    <script src="js/token_func.js"></script>
+</head>
+
+<body>
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <ul class="nav navbar-nav">
+                <li><a href="../">Home</a></li>
+                <li class="active"><a href="#">Books</a></li>
+                <li id="users"><a href="../user">Users</a></li>
+            </ul>
+        </div>
+    </nav>
+    <h2>List of books</h2>
+    <form name="bookForm">
+        <input type="hidden" name="id" value="0" />
+        <div class="form-group">
+            <label for="title">Title:</label>
+            <input class="form-control" name="title" required maxlength="50" />
+        </div>
+        <div class="form-group">
+            <label for="author">Author:</label>
+            <input class="form-control" name="author" required maxlength="50" />
+        </div>
+        <div class="form-group">
+            <label for="genre">Genre:</label>
+            <input class="form-control" name="genre" required maxlength="40" />
+        </div>
+        <div class="form-group">
+            <label for="description">Description:</label>
+            <textarea name="description" cols="2" rows="2" class="form-control" required maxlength="500"></textarea>
+        </div>
+        <div class="panel-body">
+            <button type="submit" class="btn btn-sm btn-primary">Save</button>
+        </div>
+    </form>
+    <div>
+        <label for="search">Title search</label>
+        <input type="text" name="search" oninput="searching(this.value)" />
+    </div>
+    <table class="table table-condensed table-striped table-bordered" id="myTable">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Genre</th>
+                <th>Description</th>
+                <th>Options</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script>        
+    async function check() {
+                try{
+                    await ApproveToken()                    
+                }
+                catch{
+                    window.location.href = "/";                
+                }                                   
+            }    
+        const form = document.getElementsByName("bookForm");
+        const editLink = document.getElementsByName("editLink");
+        const removeLink = document.getElementsByName("removeLink");
+        const usersLink = document.getElementById("users");
+        async function GetBooks() {
+            await ApproveToken()  
+            const response = await fetch("/book/books", {
+                method: "GET",
+                headers: { "Accept": "application/json", 
+                "Authorization":"Bearer "+ localStorage.getItem("accessToken") }
+            });
+            if (!localStorage.getItem("accessToken")) {
+                logoutBtn.remove();
+            }
+            if (response.ok === true && localStorage.getItem("accessToken")) {
+
+                const books = await response.json();
+                let rows = document.querySelector("tbody");
+                books.forEach(book => {
+
+                    rows.append(row(book));
+                });
+            }
+
+        }
+
+        async function GetBook(id) {
+            await ApproveToken()  
+            const response = await fetch("/book/" + id, {
+                method: "GET",
+                headers: { "Accept": "application/json", "Authorization":"Bearer "+ localStorage.getItem("accessToken") }
+            });
+            if (response.ok === true) {
+                const book = await response.json();
+                const form = document.forms["bookForm"];
+                form.elements["id"].value = book._id;
+                form.elements["title"].value = book.title;
+                form.elements["author"].value = book.author;
+                form.elements["genre"].value = book.genre;
+                form.elements["description"].value = book.description;
+            }
+        }
+        async function CreateBook(bookName, bookAuthor, bookGenre, bookDescription) {
+            await ApproveToken()  
+            const response = await fetch("/book/", {
+                method: "POST",
+                headers: { "Accept": "application/json", "Content-Type": "application/json",
+                 "Authorization":"Bearer "+ localStorage.getItem("accessToken") },
+                body: JSON.stringify({
+                    _title: bookName,
+                    _author: bookAuthor,
+                    _genre: bookGenre,
+                    _description: bookDescription
+                })
+            });
+            if (response.ok === true) {
+                const book = await response.json();
+                reset();
+                console.log(book);
+                document.querySelector("tbody").append(row(book));
+            }
+        }
+
+        async function EditBook(bookId, bookName, bookAuthor, bookGenre, bookDescription) {
+            await ApproveToken()  
+            const response = await fetch("/book", {
+                method: "PUT",
+                headers: { "Accept": "application/json", "Content-Type": "application/json", 
+                "Authorization":"Bearer "+ localStorage.getItem("accessToken") },
+                body: JSON.stringify({
+                    _id: bookId,
+                    _title: bookName,
+                    _author: bookAuthor,
+                    _genre: bookGenre,
+                    _description: bookDescription
+                })
+            });
+            if (response.ok === true) {
+                const book = await response.json();
+                reset();
+                document.querySelector("tr[data-rowid='" + book._id + "']").replaceWith(row(book));
+            }
+            else {
+                reset()
+            }
+        }
+
+        async function DeleteBook(_id) {
+            await ApproveToken()  
+            const response = await fetch("/book/" + _id, {
+                method: "DELETE",
+                headers: { "Accept": "application/json",
+                 "Authorization":"Bearer "+ localStorage.getItem("accessToken") }
+            });
+            if (response.ok === true) {
+                const book = await response.json();
+                document.querySelector("tr[data-rowid='" + book._id + "']").remove();
+            }
+        }
+
+
+        function reset() {
+            const form = document.forms["bookForm"];
+            form.reset();
+            form.elements["id"].value = 0;
+        }
+
+
+        function row(book) {
+
+            const tr = document.createElement("tr");
+            tr.setAttribute("data-rowid", book._id);
+
+            const nameTd = document.createElement("td");
+            nameTd.append(book.title);
+            tr.append(nameTd);
+
+            const authorTd = document.createElement("td");
+            authorTd.append(book.author);
+            tr.append(authorTd);
+
+            const genreTd = document.createElement("td");
+            genreTd.append(book.genre);
+            tr.append(genreTd);
+
+            const descriptionTd = document.createElement("td");
+            descriptionTd.append(book.description);
+            tr.append(descriptionTd);
+
+            const linksTd = document.createElement("td");
+
+            const editLink = document.createElement("a");
+            editLink.setAttribute("data-id", book._id);
+            editLink.setAttribute("style", "cursor:pointer;padding:15px;");
+            editLink.setAttribute("name", "editLink");
+            editLink.append("Change");
+            editLink.addEventListener("click", e => {
+
+                e.preventDefault();
+                GetBook(book._id);
+            });
+            linksTd.append(editLink);
+
+            const removeLink = document.createElement("a");
+            removeLink.setAttribute("data-id", book._id);
+            removeLink.setAttribute("style", "cursor:pointer;padding:15px;");
+            removeLink.setAttribute("name", "removeLink");
+            removeLink.append("Delete");
+            removeLink.addEventListener("click", e => {
+
+                e.preventDefault();
+                DeleteBook(book._id);
+            });
+
+            linksTd.append(removeLink);
+            tr.appendChild(linksTd);
+
+            return tr;
+
+
+        }
+
+
+
+        document.forms["bookForm"].addEventListener("submit", e => {
+            e.preventDefault();
+            const form = document.forms["bookForm"];
+            const id = form.elements["id"].value;
+            const title = form.elements["title"].value;
+            const author = form.elements["author"].value;
+            const genre = form.elements["genre"].value;
+            const description = form.elements["description"].value;
+            if (id == 0)
+                CreateBook(title, author, genre, description);
+            else
+                EditBook(id, title, author, genre, description);
+        });
+
+        GetBooks();
+
+
+        async function searching(value) {
+            await ApproveToken()  
+            value = value.trim();
+            const response = await fetch("/book/books", {
+                method: "GET",
+                headers: { "Accept": "application/json", 
+                "Authorization": "Bearer " + localStorage.getItem("accessToken") }
+            });
+
+            if (response.ok === true) {
+                const books = await response.json();
+                let rows = document.querySelector("tbody");
+                while (rows.firstChild) {
+                    rows.removeChild(rows.firstChild);
+                }
+                books.forEach(book => {
+                    if (book.title.toLowerCase().includes(value.toLowerCase())) {
+                        rows.append(row(book));
+                    };
+                });
+                if (value == "") {
+
+                    while (rows.firstChild) {
+                        rows.removeChild(rows.firstChild);
+                    }
+                    GetBooks();
+                }
+            }
+        }
+
+        async function getUserRole() {
+            await ApproveToken()  
+            const response = await fetch("/token/user", {
+                method: "GET",
+                headers: { "Accept": "application/json", 
+                "Authorization": "Bearer " + localStorage.getItem("accessToken") }
+            });
+            if (response.ok === true && localStorage.getItem("accessToken")) {
+                const user = await response.json();
+                let role = user.roles[0];
+                console.log(role);
+                if (role === "USER") {
+                    form[0].remove()
+                    users.remove()
+                    setTimeout(() => {
+                        editLink.forEach(element => {
+                            console.log(element);
+                            element.remove()
+                        })
+                        removeLink.forEach(element => {
+                            console.log(element);
+                            element.remove()
+                        })
+                    }, 100)
+                    setTimeout(() => {
+                        editLink.forEach(element => {
+                            element.remove()
+                        })
+                        removeLink.forEach(element => {
+                            element.remove()
+                        })
+                    }, 100)
+                    setTimeout(() => {
+
+                        editLink.forEach(element => {
+                            element.remove()
+                        })
+                        removeLink.forEach(element => {
+                            element.remove()
+                        })
+                    }, 100)
+
+                }
+            }
+        }
+        check()
+        getUserRole()
+    </script>
+</body>
+
+</html>
