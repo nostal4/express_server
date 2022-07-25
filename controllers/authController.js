@@ -54,7 +54,7 @@ class authController {
       if (!validPassword) {
         return res.status(400).json({ message: 'Incorrect Password' });
       }
-      const accessToken = generateAccessToken(user._id, user.roles);
+      const accessToken = generateAccessToken(user._id, user.roles);      
       const refreshToken = jwt.sign({ id: user._id }, secret);
       const token = new Token({ token: refreshToken, userId: user._id });
       await token.save();

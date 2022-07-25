@@ -8,6 +8,6 @@ router.get("/users", roleMiddleware(["ADMIN"]), controller.getUsers)
 router.get("/:_id", authMiddleware(), controller.getUser)
 router.delete("/:_id",roleMiddleware(["ADMIN"]), controller.deleteUser)
 router.put("/", roleMiddleware(["ADMIN"]), controller.updateUser)
-router.put("/password", controller.changePassword)
+router.put("/password", authMiddleware(), controller.changePassword)
 
 module.exports = router

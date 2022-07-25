@@ -53,19 +53,9 @@
         </tbody>
     </table>
    
-    <script>
-        async function check() {
-                try{
-                    await ApproveToken()                    
-                }
-                catch{
-                    window.location.href = "/";                
-                }                                   
-            }  
-
-
+    <script>      
         async function GetUsers() {  
-            await ApproveToken()         
+            await check()        
             const response = await fetch("/user/users", {
                 method: "GET",
                 headers: { "Accept": "application/json", "Authorization": "Bearer " + localStorage.getItem("accessToken") }
@@ -82,7 +72,7 @@
         }
   
         async function GetUser(id) {
-            await ApproveToken()
+            await check()      
             const response = await fetch("/user/" + id, {
                 method: "GET",
                 headers: { "Accept": "application/json", "Authorization": "Bearer " + localStorage.getItem("accessToken")},               
@@ -98,7 +88,7 @@
         }
      
         async function EditUser(userId, userName, userEmail, userPassword, userRole) {    
-            await ApproveToken()    
+            await check()         
             let mail = document.getElementById("email");
             while(mail.firstChild) {                    
                     mail.removeChild(mail.firstChild);
@@ -111,7 +101,7 @@
                     _username: userName,
                     _email: userEmail,
                     _password: userPassword,
-                    _role: [userRole]
+                    _role: userRole
                 })
             });
             if (response.ok === true) {
@@ -132,7 +122,7 @@
         
         
         async function DeleteUser(_id) {
-            await ApproveToken()
+            await check()        
             const response = await fetch("/user/" + _id, {
                 method: "DELETE",
                 headers: { "Accept": "application/json", "Authorization": "Bearer " +  localStorage.getItem("accessToken") }
@@ -194,15 +184,8 @@
             linksTd.append(removeLink);
             tr.appendChild(linksTd);
   
-            return tr
-
-            
-        }
-
-            
-        
-  
-        
+            return tr  
+        }    
         document.forms["userForm"].addEventListener("submit", e => {
             e.preventDefault();
             const form = document.forms["userForm"];
@@ -214,15 +197,13 @@
             EditUser(id, username, email, password, role);
         });
   
-        // check()
+
         GetUsers();
 
         window.onload = function() {
             var table = document.getElementById("myTable");
             var tbody = table.querySelector("tbody");
-        }
-
-        
+        }      
     </script>
 </body>
 </html>

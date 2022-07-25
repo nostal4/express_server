@@ -1,7 +1,7 @@
 const Router = require('express')
 const router = new Router()
 const controller = require("../controllers/tokenController")
-const roleMiddleware = require("../middleware/roleMiddleware")
+
 
 
 router.get("/user", controller.getUserByToken)

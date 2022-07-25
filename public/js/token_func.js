@@ -1,19 +1,15 @@
-async function ApproveToken() {
-  console.log(11);
+async function ApproveToken() {  
   const response = await fetch('/token/user', {
     method: 'GET',
     headers: {
       Accept: 'application/json',
       Authorization: 'Bearer ' + localStorage.getItem('accessToken')
     }
-  });
-  console.log(22);
+  }); 
   if (response.ok === true) {
-    console.log('a');
     await response.json();
     return localStorage.getItem('accessToken');
-  } else {
-    console.log('b');
+  } else {   
     await fetch('/token/newToken', {
       method: 'POST',
       headers: {
@@ -21,24 +17,31 @@ async function ApproveToken() {
         Authorization: 'Bearer ' + localStorage.getItem('refreshToken')
       }
     })
-      .then(function (resp1) {
-        console.log('c');
+      .then(function (resp1) {  
         return resp1.json();
       })
-      .then(function (data) {
-        console.log('d');
-        console.log(data);
-        if (data.accessToken) {
-          console.log('grehgrh');
+      .then(function (data) {      
+        if (data.accessToken) {         
           localStorage.setItem('accessToken', data.accessToken);
           localStorage.setItem('refreshToken', data.refreshToken);
-        }
-        // else{
-        //     localStorage.removeItem("accessToken")
-        //     localStorage.removeItem("refreshToken")
-        //     // window.location.href = '/';
-        //     return "111Error"
-        // }
+        }     
       });
   }
+}
+async function check(){
+  try{
+    await ApproveToken()                    
+  }
+  catch{
+    window.location.href = "/";                
+  }  
+
+}
+async function rev_check(){
+  try{
+    await ApproveToken()   
+    window.location.href = "/";                  
+  }
+  catch{}  
+
 }

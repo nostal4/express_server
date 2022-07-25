@@ -54,28 +54,23 @@
                 <th>Author</th>
                 <th>Genre</th>
                 <th>Description</th>
-                <th>Options</th>
+                <th id = "options">Options</th>
             </tr>
         </thead>
         <tbody>
         </tbody>
     </table>
 
-    <script>        
-    async function check() {
-                try{
-                    await ApproveToken()                    
-                }
-                catch{
-                    window.location.href = "/";                
-                }                                   
-            }    
+    <script> 
+        GetBooks();
+                
         const form = document.getElementsByName("bookForm");
         const editLink = document.getElementsByName("editLink");
         const removeLink = document.getElementsByName("removeLink");
         const usersLink = document.getElementById("users");
-        async function GetBooks() {
-            await ApproveToken()  
+        const optionsLink = document.getElementById("options");
+        async function GetBooks() { 
+            await check()              
             const response = await fetch("/book/books", {
                 method: "GET",
                 headers: { "Accept": "application/json", 
@@ -84,20 +79,25 @@
             if (!localStorage.getItem("accessToken")) {
                 logoutBtn.remove();
             }
-            if (response.ok === true && localStorage.getItem("accessToken")) {
-
+            if (response.ok === true && localStorage.getItem("accessToken")) {                
                 const books = await response.json();
+                const user = await getUser()
+                if (user.roles[0] !== "ADMIN") {
+                    optionsLink.remove()
+                    try{
+                        form[0].remove()
+                        users.remove() 
+                    }catch{}                                       
+                }
                 let rows = document.querySelector("tbody");
-                books.forEach(book => {
-
-                    rows.append(row(book));
+                books.forEach(book => {                    
+                    rows.append(row(book, user.roles[0]));
                 });
             }
-
         }
 
         async function GetBook(id) {
-            await ApproveToken()  
+            await check()  
             const response = await fetch("/book/" + id, {
                 method: "GET",
                 headers: { "Accept": "application/json", "Authorization":"Bearer "+ localStorage.getItem("accessToken") }
@@ -113,7 +113,7 @@
             }
         }
         async function CreateBook(bookName, bookAuthor, bookGenre, bookDescription) {
-            await ApproveToken()  
+            await check()  
             const response = await fetch("/book/", {
                 method: "POST",
                 headers: { "Accept": "application/json", "Content-Type": "application/json",
@@ -127,13 +127,14 @@
             });
             if (response.ok === true) {
                 const book = await response.json();
-                reset();              
-                document.querySelector("tbody").append(row(book));
+                reset();   
+                const user = await getUser()           
+                document.querySelector("tbody").append(row(book, user.roles[0]));
             }
         }
 
         async function EditBook(bookId, bookName, bookAuthor, bookGenre, bookDescription) {
-            await ApproveToken()  
+            await check()  
             const response = await fetch("/book", {
                 method: "PUT",
                 headers: { "Accept": "application/json", "Content-Type": "application/json", 
@@ -149,7 +150,8 @@
             if (response.ok === true) {
                 const book = await response.json();
                 reset();
-                document.querySelector("tr[data-rowid='" + book._id + "']").replaceWith(row(book));
+                const user = await getUser()
+                document.querySelector("tr[data-rowid='" + book._id + "']").replaceWith(row(book, user.roles[0]));
             }
             else {
                 reset()
@@ -157,7 +159,7 @@
         }
 
         async function DeleteBook(_id) {
-            await ApproveToken()  
+            await check()  
             const response = await fetch("/book/" + _id, {
                 method: "DELETE",
                 headers: { "Accept": "application/json",
@@ -177,58 +179,58 @@
         }
 
 
-        function row(book) {
+        function row(book, role) {  
+            const tr = document.createElement("tr");          
+            if (role){                
+                tr.setAttribute("data-rowid", book._id);
 
-            const tr = document.createElement("tr");
-            tr.setAttribute("data-rowid", book._id);
+                const nameTd = document.createElement("td");
+                nameTd.append(book.title);
+                tr.append(nameTd);
 
-            const nameTd = document.createElement("td");
-            nameTd.append(book.title);
-            tr.append(nameTd);
+                const authorTd = document.createElement("td");
+                authorTd.append(book.author);
+                tr.append(authorTd);
 
-            const authorTd = document.createElement("td");
-            authorTd.append(book.author);
-            tr.append(authorTd);
+                const genreTd = document.createElement("td");
+                genreTd.append(book.genre);
+                tr.append(genreTd);
 
-            const genreTd = document.createElement("td");
-            genreTd.append(book.genre);
-            tr.append(genreTd);
+                const descriptionTd = document.createElement("td");
+                descriptionTd.append(book.description);
+                tr.append(descriptionTd);
 
-            const descriptionTd = document.createElement("td");
-            descriptionTd.append(book.description);
-            tr.append(descriptionTd);
+                
+                             
+            }
+            if (role === "ADMIN"){
+                const linksTd = document.createElement("td");
 
-            const linksTd = document.createElement("td");
-
-            const editLink = document.createElement("a");
-            editLink.setAttribute("data-id", book._id);
-            editLink.setAttribute("style", "cursor:pointer;padding:15px;");
-            editLink.setAttribute("name", "editLink");
-            editLink.append("Change");
-            editLink.addEventListener("click", e => {
-
+                const editLink = document.createElement("a");
+                editLink.setAttribute("data-id", book._id);
+                editLink.setAttribute("style", "cursor:pointer;padding:15px;");
+                editLink.setAttribute("name", "editLink");
+                editLink.append("Change");
+                editLink.addEventListener("click", e => {
                 e.preventDefault();
-                GetBook(book._id);
-            });
-            linksTd.append(editLink);
+                GetBook(book._id)}); 
 
-            const removeLink = document.createElement("a");
-            removeLink.setAttribute("data-id", book._id);
-            removeLink.setAttribute("style", "cursor:pointer;padding:15px;");
-            removeLink.setAttribute("name", "removeLink");
-            removeLink.append("Delete");
-            removeLink.addEventListener("click", e => {
+                linksTd.append(editLink);
+
+                const removeLink = document.createElement("a");
+                removeLink.setAttribute("data-id", book._id);
+                removeLink.setAttribute("style", "cursor:pointer;padding:15px;");
+                removeLink.setAttribute("name", "removeLink");
+                removeLink.append("Delete");
+                removeLink.addEventListener("click", e => {
 
                 e.preventDefault();
                 DeleteBook(book._id);
-            });
-
-            linksTd.append(removeLink);
-            tr.appendChild(linksTd);
-
+                });
+                linksTd.append(removeLink);
+                tr.appendChild(linksTd);
+            }
             return tr;
-
-
         }
 
 
@@ -246,12 +248,11 @@
             else
                 EditBook(id, title, author, genre, description);
         });
-
-        GetBooks();
+        
 
 
         async function searching(value) {
-            await ApproveToken()  
+            await check()  
             value = value.trim();
             const response = await fetch("/book/books", {
                 method: "GET",
@@ -265,9 +266,10 @@
                 while (rows.firstChild) {
                     rows.removeChild(rows.firstChild);
                 }
+                const user = await getUser()
                 books.forEach(book => {
                     if (book.title.toLowerCase().includes(value.toLowerCase())) {
-                        rows.append(row(book));
+                        rows.append(row(book, user.roles[0]));
                     };
                 });
                 if (value == "") {
@@ -275,13 +277,13 @@
                     while (rows.firstChild) {
                         rows.removeChild(rows.firstChild);
                     }
-                    GetBooks();
+                    await GetBooks();
                 }
             }
         }
 
-        async function getUserRole() {
-            await ApproveToken()  
+        async function getUser() {
+            await check()  
             const response = await fetch("/token/user", {
                 method: "GET",
                 headers: { "Accept": "application/json", 
@@ -289,41 +291,10 @@
             });
             if (response.ok === true && localStorage.getItem("accessToken")) {
                 const user = await response.json();
-                let role = user.roles[0];             
-                if (role === "USER") {
-                    form[0].remove()
-                    users.remove()
-                    setTimeout(() => {
-                        editLink.forEach(element => {                         
-                            element.remove()
-                        })
-                        removeLink.forEach(element => {                      
-                            element.remove()
-                        })
-                    }, 100)
-                    setTimeout(() => {
-                        editLink.forEach(element => {
-                            element.remove()
-                        })
-                        removeLink.forEach(element => {
-                            element.remove()
-                        })
-                    }, 100)
-                    setTimeout(() => {
-
-                        editLink.forEach(element => {
-                            element.remove()
-                        })
-                        removeLink.forEach(element => {
-                            element.remove()
-                        })
-                    }, 100)
-
-                }
+                return user
             }
         }
-        check()
-        getUserRole()
+        
     </script>
 </body>
 

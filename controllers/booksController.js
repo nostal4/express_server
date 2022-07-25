@@ -1,17 +1,21 @@
 const Book = require('../models/Book');
+const logger = require('../logger');
 
 class booksController {
   async getBooks(req, res) {
     try {
+      logger.info(req, { meta: 'getBooks' }); 
       const books = await Book.find();
       res.json(books);
     } catch (e) {
+      logger.error(e);
       res.status(404).send('not found');
     }
   }
 
   async getBook(req, res) {
     try {
+      logger.info(req, { meta: 'getBook' }); 
       const { _id } = req.params;
       const book = await Book.findOne({ _id });
       if (book._id) {
@@ -19,13 +23,15 @@ class booksController {
       } else {
         res.status(404).send('not found');
       }
-    } catch {
+    } catch(e) {
+      logger.error(e);
       res.status(404).send('not found');
     }
   }
 
   async createBook(req, res) {
     try{
+      logger.info(req, { meta: 'createBook' }); 
       if (!req.body) return res.sendStatus(400);
       const { _title, _author, _genre, _description } = req.body;
   
@@ -51,13 +57,15 @@ class booksController {
       } else {
         res.status(404).send('title is used');
       }
-    }catch{
+    }catch(e){
+      logger.error(e);
       return res.status(404).send('error');
     }    
   }
 
   async deleteBook(req, res) {
     try {
+      logger.info(req, { meta: 'deleteBook' }); 
       const { _id } = req.params;
       const book = await Book.findByIdAndDelete({ _id });
       if (book._id) {
@@ -65,13 +73,15 @@ class booksController {
       } else {
         res.status(404).send('not found');
       }
-    } catch {
+    } catch(e) {
+      logger.error(e);
       res.status(404).send('not found');
     }
   }
 
   async updateBook(req, res) {
     try{
+      logger.info(req, { meta: 'updateBook' }); 
       if (!req.body) return res.sendStatus(400);
       const { _id, _title, _author, _genre, _description } = req.body;
   
@@ -106,14 +116,13 @@ class booksController {
               res.send(result);
             }
           }
-        );
+        )
       }
     }
-    catch{
+    catch(e){
+      logger.error(e);
       res.status(404).send('error');
-    }
-    
-   
+    }       
   }
 }
 

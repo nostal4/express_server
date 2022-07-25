@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { secret } = require('../config');
+const logger = require('../logger');
 
 module.exports = function (roles) {
   return function (req, res, next) {
@@ -7,8 +8,8 @@ module.exports = function (roles) {
       next();
     }
 
-    try {
-      console.log('auth', req.headers.authorization);
+    try {    
+      logger.info(req, { meta: '/role_mid' });
       const token = req.headers.authorization.split(' ')[1];
       if (!token) {
         return res.status(403).json({ message: 'User unauthorized' });
@@ -25,7 +26,7 @@ module.exports = function (roles) {
       }
       next();
     } catch (e) {
-      console.log(e);
+      logger.error(e);  
       return res.status(403).json({ message: 'User1 unauthorized' });
     }
   };

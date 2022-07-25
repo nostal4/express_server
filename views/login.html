@@ -24,8 +24,7 @@
             <input class="form-control" name="username" required maxlength="30" />
         </div>
         <div class="form-group">
-            <label for="password">Password:</label>
-            <!-- <input class="form-control" name="password" /> -->
+            <label for="password">Password:</label>        
             <input class="form-control" name="password" required pattern="[^' ']+" minlength="4" maxlength="30" />
         </div>
         <div id="resp"></div>
@@ -33,16 +32,7 @@
             <button type="submit" class="btn btn-sm btn-primary">Save</button>
         </div>
     </form>
-    <script>
-        async function check() {
-                try{
-                    await ApproveToken() 
-                    window.location.href = "/";                   
-                }
-                catch{
-                                    
-                }                                   
-            }  
+    <script>       
          const accessToken = localStorage.getItem("accessToken");
         const refreshToken = localStorage.getItem("refreshToken");
         async function CreateUser(userName, userPassword) {
@@ -63,8 +53,8 @@
                 reset();
                 localStorage.setItem("accessToken", user.accessToken)
                 localStorage.setItem("refreshToken", user.refreshToken)
-                document.getElementById("resp").append("success")
-                // window.location.href = "/";               
+                document.getElementById("resp").append("success")    
+                window.location.href = "/";                      
             } else {
                 const err = await response.json()
                 document.getElementById("resp").append(err.message)
@@ -83,8 +73,8 @@
             const username = form.elements["username"].value;
             const password = form.elements["password"].value;
             CreateUser(username, password);
-        });
-        // check()
+        });   
+        rev_check()     
     </script>
 </body>
 </html>

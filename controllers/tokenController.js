@@ -1,6 +1,7 @@
 const Token = require('../models/Token');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const logger = require('../logger');
 const { secret, jwtLifetime } = require('../config');
 
 const generateAccessToken = (id, roles) => {
@@ -13,60 +14,46 @@ const generateAccessToken = (id, roles) => {
 
 class tokensController { 
   async getNewTokens(req, res) {
-    try {
-      const refresh = req.headers.authorization.split(' ')[1];
-      console.log(refresh);
-      if (refresh == 'null') return res.sendStatus(401);
-      const token = await Token.findOne({ refresh });
-      if (token === null) return res.sendStatus(404);
-      else {
-        const token_info = jwt.verify(token.token, secret);
-        const user = await User.findOne({ _id: token_info.id });
-        if (!user) return res.sendStatus(404);
-        const accessToken = generateAccessToken(user._id, user.roles);
-        const refreshToken = jwt.sign({ id: user._id }, secret);
-        await Token.findByIdAndRemove({ _id: token.id });
-        try {
-          const check = await Token.findOne({ token: token.token });
-          if (!check) {
-            const new_token = new Token({ token: refreshToken, userId: user._id });
-            await new_token.save();
-          } else {
-            console.log('already saved');
-          }
-        } catch {}
-        return res.json({
-          accessToken: accessToken,
-          refreshToken: refreshToken
+    try {      
+      logger.info(req, { meta: 'getNewTokens' });
+      const refresh = req.headers.authorization.split(' ')[1];           
+      const token_obj = await Token.findOneAndDelete({ token: refresh });
+      if (!token_obj) return res.sendStatus(401);
+      const user = await User.findOne({ _id: token_obj.userId });      ;
+      const accessToken = generateAccessToken(user._id, user.roles);
+      const refreshToken = jwt.sign({ id: user._id }, secret);
+      const new_token_obj = new Token({ token: refreshToken, userId: user._id });
+      await new_token_obj.save();
+      return res.json({
+        accessToken: accessToken,
+        refreshToken: refreshToken
         });
-      }
     } catch (e) {
-      console.log(e);
-      res.status(405).send('jwt expired');
+      logger.error(e);
+      res.status(404).send();
     }
   }
   async getUserByToken(req, res) {
     try {
+      logger.info(req, { meta: 'getUserByToken' });
       const token = req.headers.authorization.split(' ')[1];
       const user = jwt.verify(token, secret);
-      var date = new Date();
-      var result = date.getTime();
+      let date = new Date();
+      let result = date.getTime();
       const exp_time = Math.trunc(user.exp - result / 1000);
 
       if (user && exp_time > 3) {
-        res.send(user);
-        console.log(exp_time);
+        res.send(user);        
       } else {
         res.status(404).send('not found');
       }
     } catch (e) {
-      res.status(404).send('error');
-      console.log(e);
+      res.status(404).send('error');      
     }
   }
   async logout(req, res) {
-    try {
-      console.log('logout');
+    try {     
+      logger.info(req, { meta: 'logout' }); 
       const { _id } = req.params;
       const tokens = await Token.find();
       let found = false;
@@ -78,7 +65,9 @@ class tokensController {
       }
       if (found) res.send('ok');
       else res.status(404).send('not found');
-    } catch {
+    } catch(e) 
+    {
+      logger.error(e);
       res.status(404).send('error');
     }
   }  

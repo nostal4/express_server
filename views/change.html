@@ -34,27 +34,17 @@
         </div>
         <div id="change"></div>
     </form>
-    <script>               
-        async function check() {
-                try{
-                    await ApproveToken()                    
-                }
-                catch{
-                    window.location.href = "/";                
-                }                                   
-            }            
+    <script>                                
         const change = document.getElementById("change")      
         async function getUserRole() {
-            ApproveToken() 
+            await ApproveToken() 
             const response = await fetch("/token/user", {
                 method: "GET",
                 headers: { "Accept": "application/json", "Authorization": "Bearer " + localStorage.getItem("accessToken") }
             });
             if (response.ok === true) {
-                const user = await response.json();
-                let role = user.roles[0];
-                let id = user.id;
-                return id;
+                const user = await response.json();                             
+                return user.id;
             }
         }
         async function updatePassword(userId, userOldPass, userNewPass) {
@@ -71,9 +61,12 @@
                     _old_password: userOldPass
                 })
             });
-            if (response.ok === true) {
+            if (response.ok === true) {                
+                localStorage.removeItem('accessToken', response.accessToken);
+                localStorage.removeItem('refreshToken', response.refreshToken);            
                 change.append("Password changed")
-                window.location.href = "/"; 
+                window.location.href = "/";  
+                
             }
             else {
                 const err = await response.json()
@@ -97,7 +90,7 @@
                 const form = document.forms["userForm"];
                 const oldPassword = form.elements["password"].value;
                 const newPassword = form.elements["new"].value;
-                updatePassword(res, oldPassword, newPassword);
+                await updatePassword(res, oldPassword, newPassword);
                 reset()
             })();
         });
