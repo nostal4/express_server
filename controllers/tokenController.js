@@ -45,10 +45,10 @@ class tokensController {
       if (user && exp_time > 3) {
         res.send(user);        
       } else {
-        res.status(404).send('not found');
+        res.status(401).send('error');
       }
     } catch (e) {
-      res.status(404).send('error');      
+      res.status(404).send('not found');      
     }
   }
   async logout(req, res) {

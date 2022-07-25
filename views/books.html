@@ -16,12 +16,12 @@
             <ul class="nav navbar-nav">
                 <li><a href="../">Home</a></li>
                 <li class="active"><a href="#">Books</a></li>
-                <li id="users"><a href="../user">Users</a></li>
+                <li id="users"><a href="../user">Users</a ></li >
             </ul>
         </div>
     </nav>
     <h2>List of books</h2>
-    <form name="bookForm">
+    <form name="bookForm" hidden>
         <input type="hidden" name="id" value="0" />
         <div class="form-group">
             <label for="title">Title:</label>
@@ -82,11 +82,12 @@
             if (response.ok === true && localStorage.getItem("accessToken")) {                
                 const books = await response.json();
                 const user = await getUser()
+                if (user.roles[0] === "ADMIN") {                 
+                    document.forms["bookForm"].hidden = false                                                                               
+                }
                 if (user.roles[0] !== "ADMIN") {
                     optionsLink.remove()
-                    try{
-                        form[0].remove()
-                        users.remove() 
+                    try{users.remove() 
                     }catch{}                                       
                 }
                 let rows = document.querySelector("tbody");

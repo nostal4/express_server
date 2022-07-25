@@ -93,7 +93,6 @@ class usersControler {
         if (passChanged) {
           obj.password = bcrypt.hashSync(_password, 7);
         }
-
         User.findByIdAndUpdate(
           { _id: _id },
           obj,

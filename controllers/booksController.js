@@ -5,8 +5,9 @@ class booksController {
   async getBooks(req, res) {
     try {
       logger.info(req, { meta: 'getBooks' }); 
-      const books = await Book.find();
-      res.json(books);
+      const books = await Book.find();  
+      res.set('Expires', new Date(Date.now() + 1000).toUTCString())          
+      res.json(books);                
     } catch (e) {
       logger.error(e);
       res.status(404).send('not found');

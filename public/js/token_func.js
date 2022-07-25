@@ -33,7 +33,7 @@ async function check(){
     await ApproveToken()                    
   }
   catch{
-    window.location.href = "/";                
+    // window.location.href = "/";                
   }  
 
 }
