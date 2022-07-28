@@ -1,4 +1,4 @@
-const { format, createLogger, transports } = require('winston');
+const { format, createLogger, transports, level } = require('winston');
 const { timestamp, combine, errors, json } = format;
 
 function buildProdLogger() {
@@ -12,7 +12,8 @@ function buildProdLogger() {
   new transports.File({
       level: 'info',     
       filename: 'logs/info.log'
-  })],
+  }),
+  new transports.Console({level: 'error'})],
   });
 }
 
